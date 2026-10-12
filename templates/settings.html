@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}설정 - CertificateBank{% endblock %}
+{% block content %}
+<h1>설정</h1>
+
+<section class="card">
+  <h2>Claude API 키</h2>
+  <p class="muted">
+    키는 서버 메모리에만 보관되고 디스크와 로그에는 기록되지 않습니다.
+    서버를 재시작하면 다시 입력해야 합니다.
+  </p>
+  <p>
+    상태:
+    <span class="badge {{ 'ok' if has_key else 'bad' }}">{{ '설정됨' if has_key else '없음' }}</span>
+  </p>
+  <form method="post" action="{{ url_for('settings.save_key') }}" class="row">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <input type="password" name="api_key" placeholder="sk-ant-..." autocomplete="off" required>
+    <button type="submit">저장</button>
+  </form>
+  {% if has_key %}
+  <div class="row">
+    <form method="post" action="{{ url_for('settings.test_key') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="secondary">연결 테스트</button>
+    </form>
+    <form method="post" action="{{ url_for('settings.clear_key') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="danger">키 삭제</button>
+    </form>
+  </div>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>모델</h2>
+  <form method="post" action="{{ url_for('settings.save_models') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <div class="field">
+      <label for="generate">문제 생성</label>
+      <select id="generate" name="generate">
+        {% for m in models %}
+        <option value="{{ m.id }}" {% if m.id == selected.generate %}selected{% endif %}>{{ m.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="grade">채점</label>
+      <select id="grade" name="grade">
+        {% for m in models %}
+        <option value="{{ m.id }}" {% if m.id == selected.grade %}selected{% endif %}>{{ m.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit">저장</button>
+  </form>
+</section>
+{% endblock %}

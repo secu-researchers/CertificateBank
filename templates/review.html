@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}오답 복습 - CertificateBank{% endblock %}
+{% block content %}
+<h1>오답 복습</h1>
+{% include "history_nav.html" %}
+
+<form method="get" class="row filter">
+  <input type="hidden" name="cert" value="{{ cert }}">
+  <label for="result-filter" class="muted">결과</label>
+  <select id="result-filter" name="result" onchange="this.form.submit()">
+    <option value="">전체</option>
+    {% for r in results %}<option value="{{ r }}" {% if r == result_filter %}selected{% endif %}>{{ r }}</option>{% endfor %}
+  </select>
+  <label for="topic-filter" class="muted">주제</label>
+  <select id="topic-filter" name="topic" onchange="this.form.submit()">
+    <option value="">전체</option>
+    {% for t in topics %}<option value="{{ t }}" {% if t == topic %}selected{% endif %}>{{ t }}</option>{% endfor %}
+  </select>
+</form>
+
+{% if items %}
+<p class="muted">
+  같은 시험지를 다시 푼 경우 가장 최근 응시 기준으로 틀린 문항만 보여 줍니다. 총 {{ total }}문항{% if total > limit %} 중 {{ limit }}문항 표시{% endif %}.
+</p>
+{% for i in items %}
+{% set q = i.question %}{% set r = i.result %}
+<section class="card question">
+  <div class="qhead">
+    <strong>문항 {{ q.no }}</strong>
+    <span class="badge">{{ q.type }}</span>
+    <span class="badge">난이도 {{ q.difficulty }}</span>
+    <span class="badge">{{ q.topic }}</span>
+    <span class="badge {{ 'warn-badge' if r.result == '부분정답' else 'bad' }}">{{ r.result }}</span>
+    <span class="muted">{{ i.cert }} · {{ i.submitted_at[:10] }} · <a href="{{ url_for('attempts.view', attempt_id=i.attempt_id) }}">응시 보기</a></span>
+  </div>
+  <div class="qbody">{{ q.question | question_html }}</div>
+  {% if q.options %}
+  <ol class="options">{% for opt in q.options %}<li>{{ opt }}</li>{% endfor %}</ol>
+  {% endif %}
+  <div class="muted">내 답안</div>
+  <pre class="answer">{{ format_answer(q, q.user_answer) }}</pre>
+  <div class="muted">채점자가 판단한 정답</div>
+  <pre class="answer">{{ r.correct_answer }}</pre>
+  <div class="muted">풀이과정</div>
+  <div class="qbody">{{ r.solution | question_html }}</div>
+</section>
+{% endfor %}
+{% else %}
+<section class="card">
+  <p class="muted">복습할 문항이 없습니다. 채점된 응시가 없거나 모두 맞혔습니다.</p>
+</section>
+{% endif %}
+{% endblock %}

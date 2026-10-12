@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}생성 진행 - CertificateBank{% endblock %}
+{% block content %}
+<h1>시험지 생성</h1>
+
+<section class="card">
+  <p>상태: <span id="status" class="badge">진행 중</span></p>
+  <ul id="progress" class="status-list"></ul>
+  <p id="error" class="warn" hidden></p>
+</section>
+
+<section class="card" id="result-done" hidden>
+  <h2>완료</h2>
+  <p>시험지를 저장했습니다. 문항 <span id="done-count"></span>개, ID <code id="done-id"></code></p>
+</section>
+
+<section class="card" id="result-shortfall" hidden>
+  <h2>문항 부족</h2>
+  <p>{{ max_rounds }}회 검증 뒤에도 통과하지 못한 문항을 폐기해 요청 수를 채우지 못했습니다.</p>
+  <ul id="shortfall-list" class="status-list"></ul>
+  <p>통과한 문항 <span id="short-count"></span>개로 저장할지 판단해 주세요.</p>
+  <details><summary>검증 기록</summary><pre id="log" class="log"></pre></details>
+  <div class="row">
+    <form method="post" action="{{ url_for('generate.job_accept', job_id=job_id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit">부족한 채로 저장</button>
+    </form>
+    <form method="post" action="{{ url_for('generate.job_discard', job_id=job_id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+      <button type="submit" class="danger">폐기</button>
+    </form>
+  </div>
+</section>
+
+<p><a href="{{ url_for('generate.index') }}">← 시험 생성으로</a></p>
+<script>window.JOB_STATUS_URL = {{ url_for('generate.job_status', job_id=job_id) | tojson }};</script>
+<script src="{{ url_for('static', filename='generate_job.js') }}"></script>
+{% endblock %}

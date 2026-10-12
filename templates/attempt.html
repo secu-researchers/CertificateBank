@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}제출 결과 - CertificateBank{% endblock %}
+{% block content %}
+<h1>{{ '채점 결과' if grading else '제출 완료' }}</h1>
+<p class="muted">
+  {{ attempt.cert }} · {{ attempt.submitted_at[:16] | replace('T', ' ') }} 제출
+  {% set elapsed = attempt.get('elapsed_sec') %}
+  {% if elapsed is not none %}· 소요 {{ elapsed // 60 }}분 {{ elapsed % 60 }}초{% endif %}
+  {% if grading %}· 채점 모델 {{ attempt.model }}{% endif %}
+</p>
+
+{% if not grading %}
+<div class="flash">채점 전입니다. 아래에서 채점을 시작하세요.</div>
+{% endif %}
+
+{% if grading %}
+<section class="card">
+  <h2>요약</h2>
+  <p>
+    {% if grading.total_score is not none %}
+    <strong class="score">{{ grading.total_score }} / {{ grading.max_score }}점</strong> ·
+    {% endif %}
+    정답 {{ counts['정답'] }} · 부분정답 {{ counts['부분정답'] }} · 오답 {{ counts['오답'] }}
+  </p>
+  <table class="grid">
+    <thead><tr><th>주제</th><th>문항</th><th>정답</th><th>부분정답</th></tr></thead>
+    <tbody>
+      {% for t in grading.topic_stats %}
+      <tr><td>{{ t.topic }}</td><td>{{ t.total }}</td><td>{{ t.correct }}</td><td>{{ t.partial }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+<section class="card">
+  <h2>총평</h2>
+  <div class="qbody">{{ grading.overall_feedback | question_html }}</div>
+</section>
+{% endif %}
+
+{% for q in attempt.questions %}
+{% set r = results.get(q.no) %}
+<section class="card question">
+  <div class="qhead">
+    <strong>문항 {{ q.no }}</strong>
+    <span class="badge">{{ q.type }}</span>
+    <span class="badge">난이도 {{ q.difficulty }}</span>
+    {% if grading %}<span class="badge">{{ q.topic }}</span>{% endif %}
+    {% if r %}
+    <span class="badge {{ 'ok' if r.result == '정답' else ('warn-badge' if r.result == '부분정답' else 'bad') }}">{{ r.result }}</span>
+    <span class="badge">{{ r.score }}{% if q.points %} / {{ q.points }}{% endif %}점</span>
+    {% elif q.points %}<span class="badge">{{ q.points }}점</span>{% endif %}
+  </div>
+  <div class="qbody">{{ q.question | question_html }}</div>
+  {% if q.options %}
+  <ol class="options">{% for opt in q.options %}<li>{{ opt }}</li>{% endfor %}</ol>
+  {% endif %}
+  <div class="muted">내 답안</div>
+  <pre class="answer">{{ format_answer(q, q.user_answer) }}</pre>
+  {% if r %}
+  <div class="muted">채점자가 판단한 정답</div>
+  <pre class="answer">{{ r.correct_answer }}</pre>
+  <div class="muted">풀이과정</div>
+  <div class="qbody">{{ r.solution | question_html }}</div>
+  {% endif %}
+</section>
+{% endfor %}
+
+<section class="card">
+  <h2>{{ '다시 채점' if grading else '채점' }}</h2>
+  {% if not has_key %}
+  <p class="warn">API 키가 없습니다. <a href="{{ url_for('settings.index') }}">설정</a>에서 먼저 입력하세요.</p>
+  {% endif %}
+  {% if grading %}<p class="muted">다시 채점하면 기존 채점 결과가 바뀝니다.</p>{% endif %}
+  <form method="post" action="{{ url_for('grading.start', attempt_id=attempt.id) }}" class="row"
+        {% if grading %}onsubmit="return confirm('기존 채점 결과를 덮어씁니다. 계속할까요?')"{% endif %}>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    {% if grading %}<input type="hidden" name="regrade" value="1">{% endif %}
+    <select name="model">
+      {% for m in models %}
+      <option value="{{ m.id }}" {% if m.id == selected %}selected{% endif %}>{{ m.label }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" {% if not has_key %}disabled{% endif %}>{{ '다시 채점' if grading else '채점 시작' }}</button>
+  </form>
+</section>
+
+<p><a href="{{ url_for('exams.index') }}">← 시험지 목록</a></p>
+{% endblock %}

@@ -1,0 +1,15 @@
+<nav class="subnav">
+  <a href="{{ url_for('history.index', cert=cert or None) }}" {% if request.endpoint == 'history.index' %}class="active"{% endif %}>기록</a>
+  <a href="{{ url_for('history.statistics', cert=cert or None) }}" {% if request.endpoint == 'history.statistics' %}class="active"{% endif %}>통계</a>
+  <a href="{{ url_for('history.review', cert=cert or None) }}" {% if request.endpoint == 'history.review' %}class="active"{% endif %}>오답 복습</a>
+</nav>
+{% if certs %}
+<form method="get" class="row filter">
+  <label for="cert-filter" class="muted">자격증</label>
+  <select id="cert-filter" name="cert" onchange="this.form.submit()">
+    <option value="">전체</option>
+    {% for c in certs %}<option value="{{ c }}" {% if c == cert %}selected{% endif %}>{{ c }}</option>{% endfor %}
+  </select>
+  <noscript><button type="submit">적용</button></noscript>
+</form>
+{% endif %}

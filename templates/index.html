@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>자격증 문제은행</h1>
+
+<section class="card">
+  <h2>핵심 SKILL</h2>
+  <ul class="status-list">
+    {% for name, ok in core.items() %}
+    <li>
+      <span class="badge {{ 'ok' if ok else 'bad' }}">{{ '있음' if ok else '없음' }}</span>
+      {{ name }}.md
+    </li>
+    {% endfor %}
+  </ul>
+  {% if not core_ok %}
+  <p class="warn">핵심 SKILL 파일이 없으면 시험지를 생성할 수 없습니다.</p>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>자격증 SKILL</h2>
+  {% if certs %}
+  <ul class="status-list">
+    {% for cert in certs %}<li>{{ cert }}</li>{% endfor %}
+  </ul>
+  {% else %}
+  <p class="muted"><code>skills/</code> 폴더에 자격증 SKILL(.md)이 없습니다.</p>
+  {% endif %}
+</section>
+{% endblock %}

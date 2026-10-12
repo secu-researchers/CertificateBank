@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}풀이 - CertificateBank{% endblock %}
+{% block content %}
+<h1>{{ exam.cert }}</h1>
+<p class="muted">
+  {{ exam.created_at[:16] | replace('T', ' ') }} 생성 · 문항 {{ exam.questions | length }}개 ·
+  난이도별 표준 시간 기준 권장 {{ suggested }}분 · 경과 <span id="timer">00:00</span>
+</p>
+
+<form method="post" action="{{ url_for('exams.submit', exam_id=exam.id) }}" id="solve-form"
+      data-exam-id="{{ exam.id }}" data-total="{{ exam.questions | length }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+  <input type="hidden" name="elapsed_sec" id="elapsed_sec" value="">
+
+  {% for q in exam.questions %}
+  <section class="card question" id="q{{ q.no }}">
+    <div class="qhead">
+      <strong>문항 {{ q.no }}</strong>
+      <span class="badge">{{ q.type }}</span>
+      <span class="badge">난이도 {{ q.difficulty }}</span>
+      {% if q.points %}<span class="badge">{{ q.points }}점</span>{% endif %}
+    </div>
+    <div class="qbody">{{ q.question | question_html }}</div>
+
+    {% if q.type == '사지선다형' %}
+    <div class="choices">
+      {% for opt in q.options %}
+      <label class="choice"><input type="radio" name="q{{ q.no }}" value="{{ loop.index }}"> <span>{{ loop.index }}. {{ opt }}</span></label>
+      {% endfor %}
+    </div>
+    {% elif q.type == 'TrueFalse' %}
+    <div class="choices">
+      <label class="choice"><input type="radio" name="q{{ q.no }}" value="true"> <span>참</span></label>
+      <label class="choice"><input type="radio" name="q{{ q.no }}" value="false"> <span>거짓</span></label>
+    </div>
+    {% else %}
+    {% if q.options %}
+    <div class="muted">보기</div>
+    <ol class="options">{% for opt in q.options %}<li>{{ opt }}</li>{% endfor %}</ol>
+    {% endif %}
+    {% if q.type == '빈칸 채우기형' %}
+    <textarea name="q{{ q.no }}" rows="3" placeholder="빈칸 순서대로 한 줄에 하나씩 입력"></textarea>
+    {% elif q.type == '단답형' or q.type == '단답형 실습' %}
+    <input type="text" name="q{{ q.no }}" maxlength="500" placeholder="답을 입력">
+    {% elif q.type == '논술형' %}
+    <textarea name="q{{ q.no }}" rows="14" placeholder="답안을 작성"></textarea>
+    {% else %}
+    <textarea name="q{{ q.no }}" rows="6" placeholder="답안을 작성"></textarea>
+    {% endif %}
+    {% endif %}
+  </section>
+  {% endfor %}
+
+  <div class="row">
+    <button type="submit">제출</button>
+    <button type="button" class="secondary" id="clear-draft">입력 초기화</button>
+  </div>
+  <p class="muted">입력 내용은 이 브라우저에 임시 저장되며 제출하면 삭제됩니다.</p>
+</form>
+
+<details class="card">
+  <summary>생성 검증 기록 ({{ exam.verification_log | length }}건)</summary>
+  {% if exam.verification_log %}
+  <table class="grid">
+    <thead><tr><th>배치</th><th>회차</th><th>유형</th><th>주제</th><th>결과</th></tr></thead>
+    <tbody>
+      {% for e in exam.verification_log %}
+      <tr>
+        <td>{{ e.batch }}</td><td>{{ e.round }}</td><td>{{ e.type or '-' }}</td><td>{{ e.topic or '-' }}</td>
+        <td>{% if e.passed %}통과{% else %}{% for d in e.defects %}[{{ d.item }}] {{ d.reason }}{% if not loop.last %}<br>{% endif %}{% endfor %}{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">기록이 없습니다.</p>{% endif %}
+</details>
+<script src="{{ url_for('static', filename='solve.js') }}"></script>
+{% endblock %}

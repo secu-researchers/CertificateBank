@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}기록 - CertificateBank{% endblock %}
+{% block content %}
+<h1>기록</h1>
+{% include "history_nav.html" %}
+
+{% if trend %}
+<section class="card">
+  <h2>정답률 추이</h2>
+  <p class="muted">채점된 최근 {{ trend | length }}회. 배점이 있으면 득점/만점, 없으면 문항별 점수의 평균입니다.</p>
+  <div class="bars" role="img" aria-label="정답률 추이 막대 그래프">
+    {% for r in trend %}
+    <a class="bar" href="{{ url_for('attempts.view', attempt_id=r.id) }}"
+       title="{{ r.submitted_at[:16] | replace('T', ' ') }} · {{ r.cert }} · {{ r.percent }}%">
+      <span class="fill" style="height: {{ r.percent }}%"></span>
+      <span class="label">{{ r.percent }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+{% if rows %}
+<section class="card">
+  <table class="grid">
+    <thead><tr><th>제출</th><th>자격증</th><th>문항</th><th>결과</th><th>정답률</th><th>소요</th><th></th></tr></thead>
+    <tbody>
+      {% for r in rows %}
+      <tr>
+        <td>{{ r.submitted_at[:16] | replace('T', ' ') }}</td>
+        <td>{{ r.cert }}</td>
+        <td>{{ r.count }}</td>
+        <td>
+          {% if r.graded %}
+            {% if r.total_score is not none %}{{ r.total_score }} / {{ r.max_score }}점 · {% endif %}
+            정답 {{ r.counts['정답'] }} · 부분 {{ r.counts['부분정답'] }} · 오답 {{ r.counts['오답'] }}
+          {% else %}<span class="muted">채점 전</span>{% endif %}
+        </td>
+        <td>{% if r.percent is not none %}{{ r.percent }}%{% else %}-{% endif %}</td>
+        <td class="muted">{% if r.elapsed_sec is not none %}{{ r.elapsed_sec // 60 }}분{% else %}-{% endif %}</td>
+        <td><a href="{{ url_for('attempts.view', attempt_id=r.id) }}">보기</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% else %}
+<section class="card">
+  <p class="muted">응시 기록이 없습니다. <a href="{{ url_for('exams.index') }}">시험지</a>를 풀어 보세요.</p>
+</section>
+{% endif %}
+{% endblock %}

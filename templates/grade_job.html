@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}채점 진행 - CertificateBank{% endblock %}
+{% block content %}
+<h1>채점</h1>
+
+<section class="card">
+  <p>상태: <span id="status" class="badge">진행 중</span></p>
+  <ul id="progress" class="status-list"></ul>
+  <p id="error" class="warn" hidden></p>
+</section>
+
+<p><a href="{{ url_for('attempts.view', attempt_id=attempt_id) }}">← 제출 결과로</a></p>
+<script>
+  window.JOB_STATUS_URL = {{ url_for('grading.job_status', attempt_id=attempt_id, job_id=job_id) | tojson }};
+  window.DONE_URL = {{ url_for('attempts.view', attempt_id=attempt_id) | tojson }};
+</script>
+<script src="{{ url_for('static', filename='grade_job.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}CertificateBank{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{{ url_for('main.index') }}">CertificateBank</a>
+    <nav>
+      <a href="{{ url_for('main.index') }}" {% if request.endpoint == 'main.index' %}class="active"{% endif %}>홈</a>
+      <a href="{{ url_for('generate.index') }}" {% if request.endpoint and request.endpoint.startswith('generate.') %}class="active"{% endif %}>시험 생성</a>
+      <a href="{{ url_for('exams.index') }}" {% if request.endpoint and (request.endpoint.startswith('exams.') or request.endpoint.startswith('attempts.')) %}class="active"{% endif %}>시험지</a>
+      <a href="{{ url_for('history.index') }}" {% if request.endpoint and request.endpoint.startswith('history.') %}class="active"{% endif %}>기록</a>
+      <a href="{{ url_for('settings.index') }}" {% if request.endpoint and request.endpoint.startswith('settings.') %}class="active"{% endif %}>설정</a>
+    </nav>
+  </header>
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+    <div class="flash {{ category }}">{{ message }}</div>
+    {% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

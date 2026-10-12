@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}시험지 - CertificateBank{% endblock %}
+{% block content %}
+<h1>시험지</h1>
+
+{% if exams %}
+<section class="card">
+  <table class="grid">
+    <thead><tr><th>생성</th><th>자격증</th><th>문항</th><th>유형 구성</th><th>응시</th><th></th></tr></thead>
+    <tbody>
+      {% for e in exams %}
+      <tr>
+        <td>{{ e.created_at[:16] | replace('T', ' ') }}</td>
+        <td>{{ e.cert }}</td>
+        <td>{{ e.count }}</td>
+        <td class="muted">{% for t, n in e.types.items() %}{{ t }} {{ n }}{% if not loop.last %}, {% endif %}{% endfor %}</td>
+        <td>{{ attempt_counts.get(e.id, 0) }}회</td>
+        <td><a href="{{ url_for('exams.solve', exam_id=e.id) }}">풀기</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+{% else %}
+<section class="card">
+  <p class="muted">저장된 시험지가 없습니다. <a href="{{ url_for('generate.index') }}">시험 생성</a>에서 만드세요.</p>
+</section>
+{% endif %}
+{% endblock %}
